@@ -128,7 +128,6 @@ class GomokuButton extends JButton
 
 	GomokuButton(Square s)
 	{
-		//		super(new ImageIcon(getResource("NoPiece.png")));
 		setIcon(new ImageIcon(getClass().getResource("NoPiece.png")));
 		m_square = s;
 		setIconTextGap(0);
@@ -693,7 +692,7 @@ public class Gomoku implements GomokuConstants, ActionListener
 		userMove = true;
 		JFrame.setDefaultLookAndFeelDecorated(true);
 		frame = new JFrame("Gomoku");
-		frame.setIconImage(new ImageIcon("Gomoku.png").getImage());
+		frame.setIconImage(new ImageIcon(getClass().getResource("Gomoku.png")).getImage());
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		frame.getContentPane().add(createBoard(), BorderLayout.CENTER);
