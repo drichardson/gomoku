@@ -37,6 +37,7 @@ public final class Gomoku implements GomokuConstants, MoveListener {
 
   private byte rows = Board.ROWS;
   private byte cols = Board.COLS;
+  private final String VERSION = "1.0";
 
 
   private Gomoku() {
@@ -163,7 +164,7 @@ public final class Gomoku implements GomokuConstants, MoveListener {
         p.setLayout(new GridLayout(2, 1));
         panel.add(new JLabel(new ImageIcon("Gomoku.png")));
         panel.add(new JLabel("<html>" +
-                             "<p>Gomoku" +
+                             "<p>Gomoku " + VERSION +
                              "<p>Copyright (C) 2004-2005 Douglas Ryan Richardson" +
                              "<p>Licensed under the terms of the General Public License" +
                              "<p>Contributions made by Anton Safonov" +
