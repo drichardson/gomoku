@@ -1,6 +1,6 @@
 /*
  * Gomoku.java
- * Copywrite 2004 Douglas Ryan Richardson
+ * Copyright 2004 Douglas Ryan Richardson
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -787,7 +787,7 @@ public class Gomoku implements GomokuConstants, ActionListener
 				panel.add(new JLabel(
 						"<html>" +
 						"<p>Gomoku" +
-						"<p>Copywrite (C) 2004 Douglas Ryan Richardson" +
+						"<p>Copyright (C) 2004 Douglas Ryan Richardson" +
 						"<p>Licensed under the terms of the General Public License" +
 						"</html>"));
 				p.add(panel);
