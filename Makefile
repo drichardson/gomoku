@@ -28,6 +28,9 @@ gomoku.jar: $(CLASSES) $(IMAGES) mainClass
 %.class: %.java
 	javac $<
 
+run:
+	java -jar gomoku.jar
+
 #$(PACKAGEDIR)/Gomoku.class: $(PACKAGEDIR)/Gomoku.java
 #	javac $(PACKAGEDIR)/Gomoku.java
 
