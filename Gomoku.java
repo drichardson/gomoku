@@ -266,7 +266,7 @@ class ComputerPlayer implements GomokuConstants
 	{
 		computerMove.setSquareNumber(-1);
 		
-		board.setPiece(userMove, COMPUTER_PIECE);
+		board.setPiece(userMove, USER_PIECE);
 		
 		// Check to see if the user won or if they took the last piece.
 		int vc = terminalTest(board);
