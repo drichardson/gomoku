@@ -50,8 +50,7 @@ interface GomokuConstants
 
 class Square
 {
-	private int row;
-	private int col;
+	private int m_squareNumber;
 	
 	Square(int squareNumber)
 	{
@@ -60,39 +59,32 @@ class Square
 	
 	Square(int row, int col)
 	{
-		this.row = row;
-		this.col = col;
+		setRowCol(row, col);
 	}
 	
 	int getRow()
 	{
-		return row;
+		return m_squareNumber / GomokuConstants.COLS;
 	}
 	
 	int getCol()
 	{
-		return col;
+		return m_squareNumber % GomokuConstants.COLS;
 	}
 	
 	int getSquareNumber()
 	{
-		return row * GomokuConstants.COLS + col;
+		return m_squareNumber;
 	}
 	
-	void setRow(int row)
+	void setRowCol(int row, int col)
 	{
-		this.row = row;
+		setSquareNumber(row * GomokuConstants.COLS + col);
 	}
-	
-	void setCol(int col)
-	{
-		this.col = col;
-	}
-	
+		
 	void setSquareNumber(int squareNumber)
 	{
-		row = squareNumber / GomokuConstants.COLS;
-		col = squareNumber % GomokuConstants.COLS;
+		m_squareNumber = squareNumber;
 	}
 }
 
@@ -177,8 +169,9 @@ class ComputerPlayer implements GomokuConstants
 	ComputerPlayer()
 	{
 		numPosEval = 0;
-		depth = 5;
+		depth = 2;
 		abEnabled = true;
+		board = new GomokuBoard();
 	}
 	
 	private int move(int curdepth, int maxdepth, GomokuBoard board,
@@ -190,11 +183,11 @@ class ComputerPlayer implements GomokuConstants
 		
 		Square potentialSquare = new Square(-1);
 		
-		Square curBestSquare = new Square(-1, -1);
+		Square curBestSquare = new Square(-1);
 		
 		if(curdepth == maxdepth)
 		{
-			squareOut = new Square(-1, -1);
+			squareOut.setSquareNumber(-1);
 			++numPosEval;
 			return eval(board);
 		}
@@ -222,7 +215,7 @@ class ComputerPlayer implements GomokuConstants
 				
 				if(moveVal > max)
 				{
-					squareOut = s;
+					squareOut.setSquareNumber(s.getSquareNumber());
 					max = moveVal;
 				}
 				
@@ -249,7 +242,7 @@ class ComputerPlayer implements GomokuConstants
 				
 				if(moveVal < min)
 				{
-					squareOut = s;
+					squareOut.setSquareNumber(s.getSquareNumber());
 					min = moveVal;
 				}
 				
@@ -358,8 +351,7 @@ class ComputerPlayer implements GomokuConstants
 				Square s = new Square(row, col);
 				if(parentBoard.getPiece(s) == NO_PIECE && adjacentPieces(s, parentBoard))
 				{
-					squareOut.setRow(row);
-					squareOut.setCol(col);
+					squareOut.setRowCol(row, col);
 					return true;
 				}
 				
@@ -476,6 +468,14 @@ class ComputerPlayer implements GomokuConstants
 				}
 				
 				if(col + num == COLS)
+					capCount++;
+				else
+				{
+					if(b.getPiece(new Square(row, col + num)) == opponentPiece)
+							capCount++;
+				}
+				
+				if(capCount <= maxcaps)
 					count++;
 			}
 		}
@@ -648,6 +648,7 @@ class ComputerPlayer implements GomokuConstants
 
 public class Gomoku implements GomokuConstants, ActionListener
 {
+	JFrame frame;
 	GomokuButton buttons[];
 	boolean userMove;
 	ComputerPlayer compPlayer;
@@ -656,6 +657,7 @@ public class Gomoku implements GomokuConstants, ActionListener
 	{
 		compPlayer = new ComputerPlayer();
 		userMove = true;
+		frame = new JFrame("Gomoku");
 	}
 	
 	Component createBoard()
@@ -681,31 +683,27 @@ public class Gomoku implements GomokuConstants, ActionListener
 			userMove = false;
 			GomokuButton b = (GomokuButton) e.getSource();
 			b.setPiece(USER_PIECE);
-			doMove();
 			Square compMove = new Square(-1);
 			int test = compPlayer.move(b.getSquare(), compMove);
 			if(test == COMPUTER_WIN || test == NO_WIN)
-				buttons[compMove.getSquareNumber()].setPiece(COMPUTER_PIECE);			
+				buttons[compMove.getSquareNumber()].setPiece(COMPUTER_PIECE);
+			
+			if(test == COMPUTER_WIN)
+				JOptionPane.showMessageDialog(frame, "I win, silly human!");
+			else if(test == USER_PIECE)
+				JOptionPane.showMessageDialog(frame, "Arg! I am vanquished.");
+			else if(test == DRAW)
+				JOptionPane.showMessageDialog(frame, "A draw? How unsatisfying.");
+			else
+				userMove = true;
 		}
-	}	
-	void doMove()
-	{
-	}
-	
-	static void test(Integer i)
-	{
-		i = new Integer(123);
 	}
 	
 	public static void main(String args[])
 	{
-		JFrame frame = new JFrame("Gomoku");
-		Integer j = new Integer(12);
-		System.out.println("j: " + j.toString());
-		test(j);
-		System.out.println("j: " + j.toString());
-		
 		Gomoku gomoku = new Gomoku();
+		JFrame frame = gomoku.frame;
+		
 		frame.getContentPane().add(gomoku.createBoard(), BorderLayout.CENTER);
 		frame.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
