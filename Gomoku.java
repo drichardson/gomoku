@@ -128,7 +128,8 @@ class GomokuButton extends JButton
 
 	GomokuButton(Square s)
 	{
-		super(new ImageIcon("NoPiece.png"));
+		//		super(new ImageIcon(getResource("NoPiece.png")));
+		setIcon(new ImageIcon(getClass().getResource("NoPiece.png")));
 		m_square = s;
 		setIconTextGap(0);
 		m_piece = GomokuConstants.NO_PIECE;
@@ -137,16 +138,15 @@ class GomokuButton extends JButton
 	void setPiece(int piece)
 	{
 		m_piece = piece;
+
+		Class cl = getClass();
 		
 		if(piece == GomokuConstants.COMPUTER_PIECE)
-			//setText("C");
-			setIcon(new ImageIcon("ComputerPiece.png"));
+			setIcon(new ImageIcon(cl.getResource("ComputerPiece.png")));
 		else if(piece == GomokuConstants.USER_PIECE)
-			//setText("U");
-			setIcon(new ImageIcon("PlayerPiece.png"));
+			setIcon(new ImageIcon(cl.getResource("PlayerPiece.png")));
 		else
-			//setText("");
-			setIcon(new ImageIcon("NoPiece.png"));
+			setIcon(new ImageIcon(cl.getResource("NoPiece.png")));
 	}
 	
 	protected void fireActionPerformed(ActionEvent e)
