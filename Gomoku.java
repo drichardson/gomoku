@@ -106,6 +106,9 @@ class GomokuBoard implements GomokuConstants
 	
 	int getPiece(Square square)
 	{
+		int n = square.getSquareNumber();
+		if(n >= NUM_OF_SQUARES || n < 0)
+			return NO_PIECE;
 		return pieces[square.getSquareNumber()];
 	}
 	
