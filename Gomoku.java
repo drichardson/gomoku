@@ -124,21 +124,35 @@ class GomokuBoard implements GomokuConstants
 class GomokuButton extends JButton
 {
 	Square m_square;
+	int m_piece;
 
 	GomokuButton(Square s)
 	{
+		super(new ImageIcon("NoPiece.png"));
 		m_square = s;
-		setSize(50, 50);
+		setIconTextGap(0);
+		m_piece = GomokuConstants.NO_PIECE;
 	}
 	
 	void setPiece(int piece)
 	{
+		m_piece = piece;
+		
 		if(piece == GomokuConstants.COMPUTER_PIECE)
-			setText("C");
+			//setText("C");
+			setIcon(new ImageIcon("ComputerPiece.png"));
 		else if(piece == GomokuConstants.USER_PIECE)
-			setText("U");
+			//setText("U");
+			setIcon(new ImageIcon("PlayerPiece.png"));
 		else
-			setText("");
+			//setText("");
+			setIcon(new ImageIcon("NoPiece.png"));
+	}
+	
+	protected void fireActionPerformed(ActionEvent e)
+	{
+		if(m_piece == GomokuConstants.NO_PIECE)
+			super.fireActionPerformed(e);
 	}
 
 	Square getSquare() { return m_square; }
@@ -635,6 +649,11 @@ class ComputerPlayer implements GomokuConstants
 		depth = newDepth;
 	}
 	
+	int getSearchDepth()
+	{
+		return depth;
+	}
+	
 	void setABPruningEnabled(boolean abOn)
 	{
 		abEnabled = abOn;
@@ -653,11 +672,140 @@ public class Gomoku implements GomokuConstants, ActionListener
 	boolean userMove;
 	ComputerPlayer compPlayer;
 	
+	class CloseDialog implements ActionListener
+	{
+		JDialog d;
+		
+		CloseDialog(JDialog dialog)
+		{
+			d = dialog;
+		}
+		
+		public void actionPerformed(ActionEvent e)
+		{
+			d.setVisible(false);
+		}
+	}
+	
 	Gomoku()
 	{
 		compPlayer = new ComputerPlayer();
 		userMove = true;
+		JFrame.setDefaultLookAndFeelDecorated(true);
 		frame = new JFrame("Gomoku");
+		frame.setIconImage(new ImageIcon("Gomoku.png").getImage());
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		
+		frame.getContentPane().add(createBoard(), BorderLayout.CENTER);
+		frame.addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent e) {
+				System.exit(0);
+			}
+		});
+		
+		frame.setJMenuBar(createMenuBar());
+		frame.pack();
+		frame.setLocationRelativeTo(null);
+		frame.setVisible(true);
+	}
+	
+	void newGame()
+	{
+		compPlayer.startNewGame();
+		userMove = true;
+		for(int i = 0; i < buttons.length; ++i)
+			buttons[i].setPiece(NO_PIECE);
+	}
+	
+	JMenuBar createMenuBar()
+	{
+		JMenuBar menuBar = new JMenuBar();
+		JMenu menu;
+		JMenuItem menuItem;
+		
+		// Game menu
+		menu = new JMenu("Game");
+		menu.setMnemonic(KeyEvent.VK_G);
+		menuBar.add(menu);
+		
+		menuItem = new JMenuItem("New Game");
+		menuItem.setMnemonic(KeyEvent.VK_N);
+		menu.add(menuItem);
+		menuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e)
+			{
+				newGame();
+			}
+		});
+		
+		menuItem = new JMenuItem("Search Depth...");
+		menuItem.setMnemonic(KeyEvent.VK_S);
+		menu.add(menuItem);
+		menuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e)
+			{
+				String[] vals = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" };
+				String sd = (String)JOptionPane.showInputDialog(frame,
+						"Enter a search depth.", "Search Depth", JOptionPane.PLAIN_MESSAGE,
+						null, vals, new Integer(compPlayer.getSearchDepth()).toString());
+				
+				if(sd != null)
+				{
+					compPlayer.setSearchDepth(Integer.parseInt(sd));
+				}
+			}
+		});
+		
+		menu.addSeparator();
+		
+		menuItem = new JMenuItem("Exit");
+		menuItem.setMnemonic(KeyEvent.VK_E);
+		menuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e)
+			{
+				System.exit(0);
+			}
+		});
+		menu.add(menuItem);
+		
+		
+		// Help menu
+		menu = new JMenu("Help");
+		menu.setMnemonic(KeyEvent.VK_H);
+		menuBar.add(menu);
+		
+		menuItem = new JMenuItem("About Gomoku...");
+		menuItem.setMnemonic(KeyEvent.VK_A);
+		menu.add(menuItem);
+		menuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e)
+			{
+				JDialog d = new JDialog(frame, "About Gomoku", true);
+				Container p = d.getContentPane();
+				JPanel panel = new JPanel(new FlowLayout());
+				p.setLayout(new GridLayout(2, 1));
+				panel.add(new JLabel(new ImageIcon("Gomoku.png")));
+				panel.add(new JLabel(
+						"<html>" +
+						"<p>Gomoku" +
+						"<p>Copywrite (C) 2004 Douglas Ryan Richardson" +
+						"<p>Licensed under the terms of the General Public License" +
+						"</html>"));
+				p.add(panel);
+				
+				panel = new JPanel(new FlowLayout());
+				JButton ok = new JButton("OK");
+				ok.addActionListener(new CloseDialog(d));
+				panel.add(ok);
+				p.add(panel);
+						
+				d.pack();
+				d.setLocationRelativeTo(frame);
+				d.setVisible(true);
+			}
+		});
+		
+		return menuBar;
 	}
 	
 	Component createBoard()
@@ -702,17 +850,5 @@ public class Gomoku implements GomokuConstants, ActionListener
 	public static void main(String args[])
 	{
 		Gomoku gomoku = new Gomoku();
-		JFrame frame = gomoku.frame;
-		
-		frame.getContentPane().add(gomoku.createBoard(), BorderLayout.CENTER);
-		frame.addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent e) {
-				System.exit(0);
-			}
-		});
-		//frame.setSize(new Dimension(400, 800));
-		//frame.setResizable(false);
-		frame.pack();
-		frame.setVisible(true);
 	}
 }
