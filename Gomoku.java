@@ -1,17 +1,21 @@
-// This file is part of Gomoku.
-// Gomoku is free software; you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
-//
-// Gomoku is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with Gomoku; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+/*
+ * Gomoku.java
+ * Copywrite 2004 Douglas Ryan Richardson
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
 
 import java.awt.*;
 import java.awt.event.*;
@@ -101,6 +105,13 @@ class GomokuBoard implements GomokuConstants
 		pieces = new int[NUM_OF_SQUARES];
 	}
 	
+	GomokuBoard(final GomokuBoard b)
+	{
+		pieces = new int[b.pieces.length];
+		for(int i = 0; i < b.pieces.length; ++i)
+			pieces[i] = b.pieces[i];
+	}
+	
 	int getPiece(Square square)
 	{
 		return pieces[square.getSquareNumber()];
@@ -120,8 +131,11 @@ class GomokuBoard implements GomokuConstants
 
 class GomokuButton extends JButton
 {
-	GomokuButton()
+	Square m_square;
+
+	GomokuButton(Square s)
 	{
+		m_square = s;
 		setSize(50, 50);
 	}
 	
@@ -134,6 +148,8 @@ class GomokuButton extends JButton
 		else
 			setText("");
 	}
+
+	Square getSquare() { return m_square; }
 }
 
 class ComputerPlayer implements GomokuConstants
@@ -168,7 +184,88 @@ class ComputerPlayer implements GomokuConstants
 	private int move(int curdepth, int maxdepth, GomokuBoard board,
 			Square squareOut, int turn, int alpha, int beta)
 	{
-		return 0;
+		Square s = new Square(-1, -1);
+		int max = MINWIN - 1;
+		int min = MAXWIN + 1;
+		
+		Square potentialSquare = new Square(-1);
+		
+		Square curBestSquare = new Square(-1, -1);
+		
+		if(curdepth == maxdepth)
+		{
+			squareOut = new Square(-1, -1);
+			++numPosEval;
+			return eval(board);
+		}
+		
+		int moveVal = 0;
+		
+		while(getNextPossibleMove(s, board))
+		{
+			GomokuBoard b = new GomokuBoard(board);
+			b.setPiece(s, turn == COMPUTER_TURN ? COMPUTER_PIECE : USER_PIECE);
+			
+			if(turn == COMPUTER_TURN)
+			{
+				switch(terminalTest(b))
+				{
+				case USER_WIN:
+					moveVal = MINWIN;
+					break;
+				case COMPUTER_WIN:
+					moveVal = MAXWIN;
+					break;
+				default:
+					moveVal = move(curdepth + 1, maxdepth, b, potentialSquare, USER_TURN, alpha, beta);
+				}
+				
+				if(moveVal > max)
+				{
+					squareOut = s;
+					max = moveVal;
+				}
+				
+				if(abEnabled)
+				{
+					alpha = alpha > moveVal ? alpha : moveVal;
+					if(alpha >= beta)
+						return beta;
+				}
+			}
+			else
+			{
+				switch(terminalTest(b))
+				{
+				case USER_WIN:
+					moveVal = MINWIN;
+					break;
+				case COMPUTER_WIN:
+					moveVal = MAXWIN;
+					break;
+				default:
+					moveVal = move(curdepth + 1, maxdepth, b, potentialSquare, COMPUTER_TURN, alpha, beta);
+				}
+				
+				if(moveVal < min)
+				{
+					squareOut = s;
+					min = moveVal;
+				}
+				
+				if(abEnabled)
+				{
+					beta = beta < moveVal ? beta : moveVal;
+					if(beta <= alpha)
+						return alpha;
+				}
+			}
+		}
+		
+		if(abEnabled)
+			return turn == COMPUTER_TURN ? alpha : beta;
+		
+		return turn == COMPUTER_TURN ? max : min;
 	}
 	
 	// Moves the user piece and then responds with a move.
@@ -195,12 +292,43 @@ class ComputerPlayer implements GomokuConstants
 	
 	private int terminalTest(GomokuBoard b)
 	{
-		return 0;
+		int numOfEmptySquares = NUM_OF_SQUARES;
+		
+		for(int row = 0; row < ROWS; ++row)
+		{
+			for(int col = 0; col < COLS; ++col)
+			{
+				Square s = new Square(row, col);
+				if(b.getPiece(s) != NO_PIECE)
+					--numOfEmptySquares;
+
+				switch(victory(s, b))
+				{
+				case USER_WIN:
+					return USER_WIN;
+				case COMPUTER_WIN:
+					return COMPUTER_WIN;
+				}
+			}
+		}
+
+		return numOfEmptySquares == 0 ? DRAW : NO_WIN;
+
 	}
 	
 	private int victory(Square square, GomokuBoard b)
 	{
-		return 0;
+		boolean victory = false;
+		
+		int playerPiece = b.getPiece(square);
+		
+		if(playerPiece == NO_PIECE)
+			return NO_WIN;
+		
+		if(inARowAt(square, 5, 2, b) > 0)
+			return playerPiece == USER_PIECE ? USER_WIN : COMPUTER_WIN;
+		
+		return NO_WIN;
 	}
 	
 	private boolean getNextPossibleMove(Square squareOut, GomokuBoard parentBoard)
@@ -522,10 +650,11 @@ public class Gomoku implements GomokuConstants, ActionListener
 {
 	GomokuButton buttons[];
 	boolean userMove;
+	ComputerPlayer compPlayer;
 	
 	Gomoku()
 	{
-		ComputerPlayer p = new ComputerPlayer();
+		compPlayer = new ComputerPlayer();
 		userMove = true;
 	}
 	
@@ -537,7 +666,7 @@ public class Gomoku implements GomokuConstants, ActionListener
 		buttons = new GomokuButton[NUM_OF_SQUARES];
 		for(int i = 0; i < NUM_OF_SQUARES; ++i)
 		{	
-			buttons[i] = new GomokuButton();
+			buttons[i] = new GomokuButton(new Square(i));
 			buttons[i].addActionListener(this);
 			pane.add(buttons[i]);
 		}
@@ -553,9 +682,12 @@ public class Gomoku implements GomokuConstants, ActionListener
 			GomokuButton b = (GomokuButton) e.getSource();
 			b.setPiece(USER_PIECE);
 			doMove();
+			Square compMove = new Square(-1);
+			int test = compPlayer.move(b.getSquare(), compMove);
+			if(test == COMPUTER_WIN || test == NO_WIN)
+				buttons[compMove.getSquareNumber()].setPiece(COMPUTER_PIECE);			
 		}
-	}
-	
+	}	
 	void doMove()
 	{
 	}
