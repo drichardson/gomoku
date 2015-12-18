@@ -23,7 +23,7 @@ IMAGES=$(IMAGEDIR)/ComputerPiece.png \
 	$(IMAGEDIR)/PlayerPiece.png
 
 gomoku.jar: $(CLASSES) $(IMAGES) mainClass
-	jar cfm gomoku.jar mainClass $(PACKAGEDIR)/*.class $(IMAGES) COPYING CREDITS
+	jar cfm gomoku.jar mainClass $(PACKAGEDIR)/*.class $(IMAGES) LICENSE CREDITS
 
 %.class: %.java
 	javac $<
